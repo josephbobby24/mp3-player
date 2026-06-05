@@ -2,6 +2,9 @@ package me.joseph;
 
 import javazoom.jl.decoder.JavaLayerException;
 import javazoom.jl.player.Player;
+import javazoom.jl.player.advanced.AdvancedPlayer;
+import javazoom.jl.player.advanced.PlaybackEvent;
+import javazoom.jl.player.advanced.PlaybackListener;
 import lombok.Getter;
 import lombok.Setter;
 import me.joseph.component.SongList;
@@ -9,7 +12,6 @@ import me.joseph.component.SongList;
 import javax.swing.*;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -25,7 +27,7 @@ public class App extends JFrame {
     @Getter
     private final List<String> songTitles = new ArrayList<>();
 
-    Player player;
+    AdvancedPlayer player;
 
     public App() {
         initialiseSongs();
@@ -34,7 +36,7 @@ public class App extends JFrame {
     }
 
     public void initialiseSongs() {
-        String dir = "";
+        String dir = "C://Users/josep/Desktop/Songs";
         Path path = Paths.get(dir);
         File folder = new File(path.toString());
 
@@ -71,13 +73,14 @@ public class App extends JFrame {
         }
 
         try {
-            player = new Player(
+            player = new AdvancedPlayer(
                     new FileInputStream(songs.get(currentSong))
             );
 
             Thread thread = new Thread(() -> {
                 try {
                     player.play();
+
                 } catch (JavaLayerException e) {
                     e.printStackTrace();
                 }
@@ -85,14 +88,15 @@ public class App extends JFrame {
 
             thread.start();
 
-            while (!player.isComplete()) {
-            }
 
-            thread.interrupt();
-            System.out.println("b");
-
-            currentSong++;
-            play();
+            player.setPlayBackListener(new PlaybackListener() {
+                @Override
+                public void playbackFinished(PlaybackEvent evt) {
+                    thread.interrupt();
+                    currentSong++;
+                    play();
+                }
+            });
 
         } catch (Exception e) {
             e.printStackTrace();
