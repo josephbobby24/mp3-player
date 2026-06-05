@@ -58,15 +58,14 @@ public class App extends JFrame {
         add(new JScrollPane(new SongList(this)));
     }
 
-    public void addSong(String path) {
-        this.songs.add(path);
-    }
-
-    public void removeSong(String path) {
-        this.songs.remove(path);
-    }
-
     public void play() {
+        if (songs.isEmpty()) return;
+
+        System.out.println(currentSong);
+        if (currentSong < 0 || currentSong >= songs.size()) {
+            currentSong = 0;
+        }
+
         if (player != null) {
             player.close();
         }
@@ -76,13 +75,24 @@ public class App extends JFrame {
                     new FileInputStream(songs.get(currentSong))
             );
 
-            new Thread(() -> {
+            Thread thread = new Thread(() -> {
                 try {
                     player.play();
                 } catch (JavaLayerException e) {
                     e.printStackTrace();
                 }
-            }).start();
+            });
+
+            thread.start();
+
+            while (!player.isComplete()) {
+            }
+
+            thread.interrupt();
+            System.out.println("b");
+
+            currentSong++;
+            play();
 
         } catch (Exception e) {
             e.printStackTrace();
