@@ -10,6 +10,7 @@ import lombok.Setter;
 import me.joseph.component.SongList;
 
 import javax.swing.*;
+import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.nio.file.Path;
@@ -26,6 +27,8 @@ public class App extends JFrame {
     private final List<String> songs = new ArrayList<>();
     @Getter
     private final List<String> songTitles = new ArrayList<>();
+    @Getter @Setter
+    private String dir = "C://Users/josep/Desktop/Songs";
 
     AdvancedPlayer player;
 
@@ -36,7 +39,7 @@ public class App extends JFrame {
     }
 
     public void initialiseSongs() {
-        String dir = "C://Users/josep/Desktop/Songs";
+        this.songs.clear();
         Path path = Paths.get(dir);
         File folder = new File(path.toString());
 
@@ -57,7 +60,28 @@ public class App extends JFrame {
     }
 
     public void initialiseComponents() {
-        add(new JScrollPane(new SongList(this)));
+        setLayout(new BorderLayout());
+
+        JTextField textField = new JTextField(dir);
+
+        JButton button = new JButton("Change Directory");
+
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.add(textField, BorderLayout.CENTER);
+        topPanel.add(button, BorderLayout.EAST);
+
+        JList songList = new SongList(this);
+        JScrollPane pane = new JScrollPane(songList);
+
+        add(topPanel, BorderLayout.NORTH);
+        add(pane, BorderLayout.CENTER);
+
+        button.addActionListener(e -> {
+            String value = textField.getText();
+            this.setDir(value);
+            this.initialiseSongs();
+            songList.setListData(this.songs.toArray());
+        });
     }
 
     public void play() {
