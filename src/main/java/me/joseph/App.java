@@ -1,7 +1,6 @@
 package me.joseph;
 
 import javazoom.jl.decoder.JavaLayerException;
-import javazoom.jl.player.JavaSoundAudioDevice;
 import javazoom.jl.player.advanced.AdvancedPlayer;
 import javazoom.jl.player.advanced.PlaybackEvent;
 import javazoom.jl.player.advanced.PlaybackListener;
@@ -9,18 +8,16 @@ import lombok.Getter;
 import lombok.Setter;
 import me.joseph.component.SongList;
 
-import javax.sound.sampled.FloatControl;
-import javax.sound.sampled.Port;
-import javax.sound.sampled.SourceDataLine;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
-import java.lang.reflect.Field;
+import java.io.FileOutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 public class App extends JFrame {
 
@@ -32,6 +29,7 @@ public class App extends JFrame {
     private final List<String> songTitles = new ArrayList<>();
     @Getter @Setter
     private String dir = "";
+    private final Properties config = new Properties();
 
     private float volume = 0;
 
@@ -39,6 +37,7 @@ public class App extends JFrame {
     VolumeAudioDevice device = new VolumeAudioDevice();
 
     public App() {
+        loadConfig();
         initialiseSongs();
         initialiseDisplay();
         initialiseComponents();
@@ -94,6 +93,8 @@ public class App extends JFrame {
             this.setDir(value);
             this.initialiseSongs();
             songList.setListData(this.songs.toArray());
+            config.setProperty("dir", value);
+            saveConfig();
         });
 
         slider.addChangeListener(e -> {
@@ -108,6 +109,9 @@ public class App extends JFrame {
             if (device != null) {
                 device.setVolume(volume);
             }
+
+            config.setProperty("volume", "" + volume);
+            saveConfig();
         });
 
 
@@ -160,7 +164,29 @@ public class App extends JFrame {
         }
     }
 
-    public float convertFloatToDecibel(float fValue) {
-        return (float) (20 * Math.log10(fValue));
+    public void loadConfig() {
+        try {
+            File file = new File(System.getProperty("user.dir"), "config.properties");
+
+            if (!file.exists()) return;
+
+            config.load(new FileInputStream(file));
+
+            this.dir = config.getProperty("dir", "");
+            this.volume = Float.parseFloat(config.getProperty("volume", "0"));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void saveConfig() {
+        try {
+            File file = new File(System.getProperty("user.dir"), "config.properties");
+            config.store(new FileOutputStream(file), "App Config");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
