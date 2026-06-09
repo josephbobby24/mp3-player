@@ -47,3 +47,4 @@ build/
 .idea/encodings.xml
 .idea/discord.xml
 *.exe
+config.properties
