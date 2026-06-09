@@ -36,7 +36,7 @@ public class App extends JFrame {
     private float volume = 0;
 
     AdvancedPlayer player;
-    VolumeAudioDevice device;
+    VolumeAudioDevice device = new VolumeAudioDevice();
 
     public App() {
         initialiseSongs();
@@ -127,17 +127,17 @@ public class App extends JFrame {
 
         try {
             device = new VolumeAudioDevice();
-
             player = new AdvancedPlayer(
                     new FileInputStream(songs.get(currentSong)),
                     device
             );
 
+            device.setVVolume(this.volume);
+
 
             Thread thread = new Thread(() -> {
                 try {
                     player.play();
-
                 } catch (JavaLayerException e) {
                     e.printStackTrace();
                 }
@@ -145,11 +145,8 @@ public class App extends JFrame {
 
             thread.start();
 
-            Thread.sleep(100);
-
-            device.setVolume(this.volume);
-
             player.setPlayBackListener(new PlaybackListener() {
+
                 @Override
                 public void playbackFinished(PlaybackEvent evt) {
                     thread.interrupt();
