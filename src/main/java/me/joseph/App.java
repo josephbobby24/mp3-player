@@ -1,7 +1,7 @@
 package me.joseph;
 
 import javazoom.jl.decoder.JavaLayerException;
-import javazoom.jl.player.Player;
+import javazoom.jl.player.JavaSoundAudioDevice;
 import javazoom.jl.player.advanced.AdvancedPlayer;
 import javazoom.jl.player.advanced.PlaybackEvent;
 import javazoom.jl.player.advanced.PlaybackListener;
@@ -9,15 +9,18 @@ import lombok.Getter;
 import lombok.Setter;
 import me.joseph.component.SongList;
 
+import javax.sound.sampled.FloatControl;
+import javax.sound.sampled.Port;
+import javax.sound.sampled.SourceDataLine;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
+import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class App extends JFrame {
 
@@ -28,9 +31,12 @@ public class App extends JFrame {
     @Getter
     private final List<String> songTitles = new ArrayList<>();
     @Getter @Setter
-    private String dir = "C://Users/josep/Desktop/Songs";
+    private String dir = "";
+
+    private float volume = 0;
 
     AdvancedPlayer player;
+    VolumeAudioDevice device;
 
     public App() {
         initialiseSongs();
@@ -40,6 +46,9 @@ public class App extends JFrame {
 
     public void initialiseSongs() {
         this.songs.clear();
+
+        if (dir.isEmpty()) return;
+
         Path path = Paths.get(dir);
         File folder = new File(path.toString());
 
@@ -70,6 +79,10 @@ public class App extends JFrame {
         topPanel.add(textField, BorderLayout.CENTER);
         topPanel.add(button, BorderLayout.EAST);
 
+        JSlider slider = new JSlider(0, 100, 100);
+        topPanel.add(slider, BorderLayout.SOUTH);
+
+
         JList songList = new SongList(this);
         JScrollPane pane = new JScrollPane(songList);
 
@@ -82,12 +95,28 @@ public class App extends JFrame {
             this.initialiseSongs();
             songList.setListData(this.songs.toArray());
         });
+
+        slider.addChangeListener(e -> {
+            float normalized = slider.getValue() / 100f;
+
+            if (normalized == 0) {
+                volume = -80f;
+            } else {
+                volume = (float) (20 * Math.log10(normalized));
+            }
+
+            if (device != null) {
+                device.setVolume(volume);
+            }
+        });
+
+
     }
+
 
     public void play() {
         if (songs.isEmpty()) return;
 
-        System.out.println(currentSong);
         if (currentSong < 0 || currentSong >= songs.size()) {
             currentSong = 0;
         }
@@ -97,9 +126,13 @@ public class App extends JFrame {
         }
 
         try {
+            device = new VolumeAudioDevice();
+
             player = new AdvancedPlayer(
-                    new FileInputStream(songs.get(currentSong))
+                    new FileInputStream(songs.get(currentSong)),
+                    device
             );
+
 
             Thread thread = new Thread(() -> {
                 try {
@@ -112,6 +145,9 @@ public class App extends JFrame {
 
             thread.start();
 
+            Thread.sleep(100);
+
+            device.setVolume(this.volume);
 
             player.setPlayBackListener(new PlaybackListener() {
                 @Override
@@ -127,4 +163,7 @@ public class App extends JFrame {
         }
     }
 
+    public float convertFloatToDecibel(float fValue) {
+        return (float) (20 * Math.log10(fValue));
+    }
 }
