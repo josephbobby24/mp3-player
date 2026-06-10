@@ -50,3 +50,4 @@ build/
 config.properties
 launch4j.log
 config.properties
+*.properties
