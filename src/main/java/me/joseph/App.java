@@ -46,8 +46,8 @@ public class App extends JFrame {
 
         loadConfig();
         initialiseSongs();
-        initialiseDisplay();
         initialiseComponents();
+        initialiseDisplay();
     }
 
     public void initialiseSongs() {
@@ -72,6 +72,7 @@ public class App extends JFrame {
         setSize(600, 650);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setTitle("Zeply Music Player");
+        pack();
         setVisible(true);
     }
 
@@ -79,18 +80,27 @@ public class App extends JFrame {
         setLayout(new BorderLayout());
 
         JTextField textField = new JTextField(dir);
+        textField.setBackground(Color.BLACK);
+        textField.setForeground(Color.WHITE);
 
         JButton button = new JButton("Change Directory");
+        button.setBackground(Color.BLACK);
+        button.setForeground(Color.WHITE);
 
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.add(textField, BorderLayout.CENTER);
         topPanel.add(button, BorderLayout.EAST);
 
         JSlider slider = new JSlider(0, 100, 100);
+        slider.setBackground(Color.BLACK);
+        slider.setForeground(Color.BLUE);
         topPanel.add(slider, BorderLayout.SOUTH);
 
 
         JList songList = new SongList(this);
+        songList.setBackground(Color.BLACK);
+        songList.setForeground(Color.WHITE);
+
         JScrollPane pane = new JScrollPane(songList);
 
         add(topPanel, BorderLayout.NORTH);
