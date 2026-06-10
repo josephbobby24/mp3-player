@@ -13,6 +13,7 @@ import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -31,12 +32,18 @@ public class App extends JFrame {
     private String dir = "";
     private final Properties config = new Properties();
 
+    private String configFolder;
+    private String configFile;
+
     private float volume = 0;
 
     AdvancedPlayer player;
     VolumeAudioDevice device = new VolumeAudioDevice();
 
     public App() {
+        this.configFolder = getConfigFolderPath();
+        this.configFile = getConfigFilePath();
+
         loadConfig();
         initialiseSongs();
         initialiseDisplay();
@@ -45,6 +52,7 @@ public class App extends JFrame {
 
     public void initialiseSongs() {
         this.songs.clear();
+        this.songTitles.clear();
 
         if (dir.isEmpty()) return;
 
@@ -166,11 +174,24 @@ public class App extends JFrame {
 
     public void loadConfig() {
         try {
-            File file = new File(System.getProperty("user.dir"), "config.properties");
+            File folder = new File(configFolder);
 
-            if (!file.exists()) return;
+            if (!folder.exists()) {
+                folder.mkdirs();
+            }
 
-            config.load(new FileInputStream(file));
+            File file = new File(configFile);
+
+            if (!file.exists()) {
+                config.setProperty("dir", "");
+                config.setProperty("volume", "0");
+                saveConfig();
+                return;
+            }
+
+            try (FileInputStream in = new FileInputStream(file)) {
+                config.load(in);
+            }
 
             this.dir = config.getProperty("dir", "");
             this.volume = Float.parseFloat(config.getProperty("volume", "0"));
@@ -182,11 +203,32 @@ public class App extends JFrame {
 
     public void saveConfig() {
         try {
-            File file = new File(System.getProperty("user.dir"), "config.properties");
-            config.store(new FileOutputStream(file), "App Config");
+            File folder = new File(configFolder);
+
+            if (!folder.exists()) {
+                folder.mkdirs();
+            }
+
+            try (FileOutputStream out = new FileOutputStream(configFile)) {
+                config.store(out, "Zeply Music Player Configuration");
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public String getConfigFolderPath() {
+        return Paths.get(
+                System.getProperty("user.home"),
+                ".zeply-music"
+        ).toString();
+    }
+
+    public String getConfigFilePath() {
+        return Paths.get(
+                getConfigFolderPath(),
+                "config.properties"
+        ).toString();
     }
 }
